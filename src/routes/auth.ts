@@ -50,19 +50,17 @@ router.get('/login', async (req, res) => {
 
     const token = await createToken(user);
 
-    res.cookie('auth_token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      sameSite: 'lax',
-    });
-
+    // ✅ If redirectUrl provided, decode it and append token
     if (redirectUrl) {
       const decoded = JSON.parse(Buffer.from(redirectUrl as string, 'base64').toString());
-      return res.redirect(decoded.redirectUrl || '/dashboard');
+      const redirectPath = decoded.redirectUrl || '/dashboard';
+
+      const frontendRedirect = `${process.env.FRONTEND_URL}${redirectPath}?token=${token}`;
+      return res.redirect(frontendRedirect);
     }
 
-    res.json({ message: 'Authenticated', user });
+    // If no redirect URL, fallback
+    return res.json({ message: 'Authenticated', token });
   } catch (err) {
     console.error('[LOGIN_ERROR]', err);
     res.status(500).json({ error: 'Internal server error' });

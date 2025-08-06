@@ -24,7 +24,14 @@ const createToken = async (user: any) => {
 };
 
 router.get('/login', async (req, res) => {
-  const { telegramUserId, username, address, signature, language = 'en', redirectUrl } = req.query;
+  const {
+    telegramUserId,
+    username,
+    address,
+    signature,
+    language = 'en',
+    redirectUrl,
+  } = req.query;
 
   if (!telegramUserId || !username || !address || !signature) {
     return res.status(400).json({ error: 'Missing required parameters' });
@@ -50,17 +57,19 @@ router.get('/login', async (req, res) => {
 
     const token = await createToken(user);
 
-    // ✅ If redirectUrl provided, decode it and append token
     if (redirectUrl) {
       const decoded = JSON.parse(Buffer.from(redirectUrl as string, 'base64').toString());
-      const redirectPath = decoded.redirectUrl || '/dashboard';
 
-      const frontendRedirect = `${process.env.FRONTEND_URL}${redirectPath}?token=${token}`;
-      return res.redirect(frontendRedirect);
+      // ✅ Clean slashes
+      const base = (process.env.FRONTEND_URL || '').replace(/\/+$/, '');
+      const path = (decoded.redirectUrl || '/dashboard').replace(/^\/+/, '/');
+      const finalRedirectUrl = `${base}${path}?token=${token}`;
+
+      console.log('✅ Redirecting to:', finalRedirectUrl);
+      return res.redirect(finalRedirectUrl);
     }
 
-    // If no redirect URL, fallback
-    return res.json({ message: 'Authenticated', token });
+    res.json({ message: 'Authenticated', token });
   } catch (err) {
     console.error('[LOGIN_ERROR]', err);
     res.status(500).json({ error: 'Internal server error' });

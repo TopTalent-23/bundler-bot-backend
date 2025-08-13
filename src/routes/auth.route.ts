@@ -1,7 +1,6 @@
 import express from 'express';
 import { Keypair } from '@solana/web3.js';
 import bs58 from 'bs58';
-import { SignJWT } from 'jose';
 import cookieParser from 'cookie-parser';
 import { UserModel } from '../models';
 
@@ -10,7 +9,10 @@ router.use(cookieParser());
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
 
-const createToken = async (user: any) => {
+// Create a JWT token for the user
+const createToken = async (user: any): Promise<string> => {
+    const { SignJWT }: typeof import('jose') = await import('jose');
+    
     return await new SignJWT({
         telegramUserId: user.telegramUserId,
         username: user.username,
@@ -58,9 +60,10 @@ router.get('/login', async (req, res) => {
         const token = await createToken(user);
 
         if (redirectUrl) {
-            const decoded = JSON.parse(Buffer.from(redirectUrl as string, 'base64').toString());
+            const decoded = JSON.parse(
+                Buffer.from(redirectUrl as string, 'base64').toString()
+            );
 
-            // ✅ Clean slashes
             const base = (process.env.FRONTEND_URL || '').replace(/\/+$/, '');
             const path = (decoded.redirectUrl || '/dashboard').replace(/^\/+/, '/');
             const finalRedirectUrl = `${base}${path}?token=${token}`;
@@ -87,9 +90,8 @@ router.get('/me', async (req, res) => {
     if (!token) return res.status(401).json({ error: 'No token provided' });
 
     try {
-        const { payload } = await import('jose').then(({ jwtVerify }) =>
-            jwtVerify(token, JWT_SECRET)
-        );
+        const { jwtVerify }: typeof import('jose') = await import('jose');
+        const { payload } = await jwtVerify(token, JWT_SECRET);
         res.json({ user: payload });
     } catch {
         res.status(401).json({ error: 'Invalid token' });

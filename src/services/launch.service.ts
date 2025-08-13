@@ -16,7 +16,7 @@ import { JitoMultiTryBundleExecutor } from "../transaction";
 interface LaunchTokenParams {
     telegramId: string;
     platform: 'pumpfun' | 'letsbonk';
-    iamge: File,
+    // iamge: File,
     name: string;
     symbol: string;
     description: string;
@@ -131,7 +131,7 @@ const createPumpfunTokenAndBuyBundles = async (params: LaunchTokenParams) => {
 
     // create metadata
     let formData = new FormData();
-    formData.append('file', params.iamge);
+    // formData.append('file', params.iamge);
     formData.append('name', params.name);
     formData.append('symbol', params.symbol);
     formData.append('description', params.description);
@@ -419,7 +419,7 @@ const createLetsbonkTokenAndBuyBundles = async (params: LaunchTokenParams) => {
 
     // create metadata
     let formData = new FormData();
-    formData.append('file', params.iamge);
+    // formData.append('file', params.iamge);
     formData.append('name', params.name);
     formData.append('symbol', params.symbol);
     formData.append('description', params.description);

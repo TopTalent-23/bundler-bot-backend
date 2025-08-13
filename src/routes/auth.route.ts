@@ -28,7 +28,6 @@ const createToken = async (user: any): Promise<string> => {
 router.get('/login', async (req, res) => {
     const {
         telegramUserId,
-        redirectUrl,
     } = req.query;
 
     if (!telegramUserId) {
@@ -38,19 +37,6 @@ router.get('/login', async (req, res) => {
     try {
         const user = await UserModel.findOne({ telegramUserId });
         const token = await createToken(user);
-
-        if (redirectUrl) {
-            const decoded = JSON.parse(
-                Buffer.from(redirectUrl as string, 'base64').toString()
-            );
-
-            const base = (process.env.FRONTEND_URL || '').replace(/\/+$/, '');
-            const path = (decoded.redirectUrl || '/dashboard').replace(/^\/+/, '/');
-            const finalRedirectUrl = `${base}${path}?token=${token}`;
-
-            console.log('✅ Redirecting to:', finalRedirectUrl);
-            return res.redirect(finalRedirectUrl);
-        }
 
         res.json({ message: 'Authenticated', token });
     } catch (err) {

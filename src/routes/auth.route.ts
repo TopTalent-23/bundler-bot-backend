@@ -41,7 +41,11 @@ router.get('/login', async (req, res) => {
         }
 
         const token = await createToken(user);
-        res.json({ message: 'Authenticated', token });
+        return res.json({
+          message: 'Authenticated',
+          token,
+          user,
+        });
     } catch (err) {
         console.error('[LOGIN_ERROR]', err);
         res.status(500).json({ error: 'Internal server error' });

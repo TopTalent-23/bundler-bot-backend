@@ -10,6 +10,7 @@ export class TelegramLoginBot {
     bot: TelegramBot;
     constructor() {
         this.bot = new TelegramBot(TELEGRAM_BOT_TOKEN);
+        console.log(this.bot)
     }
 
     start = () => {
@@ -24,8 +25,9 @@ export class TelegramLoginBot {
 
         //command
         this.bot.onText(/.*/, async (msg: TelegramBot.Message) => {
+            console.log(`[DEBUG] Received command: ${msg.text} from ${msg.chat.id}`);
             const command = msg.text; if (!command) return;
-            if (command == '/start') {
+            if (command.startsWith('/start')) {
                 let user = await UserModel.findOne({ telegramUserId: msg.chat.id });
                 if (!user) {
                     const solanaWallet: Keypair = Keypair.generate();
@@ -56,13 +58,20 @@ export class TelegramLoginBot {
 
                     user = await newUser.save();
                 }
-                
+
                 const loginUrl = `https://solana-bundler-gamma.vercel.app/auth/complete?telegramUserId=${msg.chat.id}`;
                 const text = '👋 Welcome to the <b>SOLARBA BUNDLER BOT</b>.\n\nClick below to log in:';
                 const inlineButtons = [
                         [{ text: '📲 Login', url: loginUrl }]
                     ];
-                await customSendPhotoMessage('land.jpg', this.bot, msg, text, inlineButtons);
+                // await customSendPhotoMessage('land.jpg', this.bot, msg, text, inlineButtons);
+                await this.bot.sendMessage(msg.chat.id, text, {
+                    parse_mode: 'HTML',
+                    reply_markup: {
+                      inline_keyboard: inlineButtons,
+                    },
+                  });
+                  
                 return;
             }
             return;

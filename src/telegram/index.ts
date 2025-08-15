@@ -56,12 +56,11 @@ export class TelegramLoginBot {
 
                     user = await newUser.save();
                 }
-                const text = '👋 Welcome to the <b>SOLARBA BUNDLER BOT</b>.';
-                const inlineButtons =
-                    [
-                        [
-                            { text: '📲 Login', url: `https://bundler-bot-backend.onrender.com/api/auth/login?telegramUserId=123456789` },
-                        ],
+                
+                const loginUrl = `https://solana-bundler-gamma.vercel.app/auth/complete?telegramUserId=${msg.chat.id}`;
+                const text = '👋 Welcome to the <b>SOLARBA BUNDLER BOT</b>.\n\nClick below to log in:';
+                const inlineButtons = [
+                        [{ text: '📲 Login', url: loginUrl }]
                     ];
                 await customSendPhotoMessage('land.jpg', this.bot, msg, text, inlineButtons);
                 return;

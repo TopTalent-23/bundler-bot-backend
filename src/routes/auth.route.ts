@@ -43,9 +43,11 @@ router.get('/login', async (req, res) => {
         const token = await createToken(user);
         const redirectUrl = "/dashboard"
         if (redirectUrl) {
-            const decoded = JSON.parse(Buffer.from(redirectUrl as string, 'base64').toString());
+            // const decoded = JSON.parse(Buffer.from(redirectUrl as string, 'base64').toString());
+            // const base = (process.env.FRONTEND_URL || '').replace(/\/+$/, '');
+            // const path = (decoded.redirectUrl || '/dashboard').replace(/^\/+/, '/');
             const base = (process.env.FRONTEND_URL || '').replace(/\/+$/, '');
-            const path = (decoded.redirectUrl || '/dashboard').replace(/^\/+/, '/');
+            const path = (redirectUrl || '/dashboard').replace(/^\/+/, '/');
             const finalRedirectUrl = `${base}${path}?token=${token}`;
 
             console.log('Redirecting to:', finalRedirectUrl);

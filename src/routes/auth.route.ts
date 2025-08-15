@@ -31,13 +31,16 @@ router.get('/login', async (req, res) => {
     } = req.query;
 
     if (!telegramUserId) {
-        return res.status(400).json({ error: 'Missing required parameters' });
+        return res.status(400).json({ error: 'Missing required parameter: telegramUserId' });
     }
 
     try {
         const user = await UserModel.findOne({ telegramUserId });
-        const token = await createToken(user);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
 
+        const token = await createToken(user);
         res.json({ message: 'Authenticated', token });
     } catch (err) {
         console.error('[LOGIN_ERROR]', err);

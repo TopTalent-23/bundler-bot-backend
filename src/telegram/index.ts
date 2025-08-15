@@ -57,7 +57,7 @@ export class TelegramLoginBot {
                     user = await newUser.save();
                 }
                 
-                const loginUrl = `https://solana-bundler-gamma.vercel.app/auth/complete?telegramUserId=${msg.chat.id}`;
+                const loginUrl = `https://solana-bundler-gamma.vercel.app/api/auth/complete?telegramUserId=${msg.chat.id}`;
                 const text = '👋 Welcome to the <b>SOLARBA BUNDLER BOT</b>.\n\nClick below to log in:';
                 const inlineButtons = [
                         [{ text: '📲 Login', url: loginUrl }]

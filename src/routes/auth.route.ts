@@ -52,7 +52,7 @@ router.get('/login', async (req, res) => {
         }
 
         // res.json({ message: 'Authenticated', user });
-        return res.redirect(`https://solana-bundler-gamma.vercel.app/dashboard?token=${token}`);
+        return res.redirect(`https://solana-bundler-gamma.vercel.app/login?token=${token}`);
     } catch (err) {
         console.error('[LOGIN_ERROR]', err);
         res.status(500).json({ error: 'Internal server error occured' });

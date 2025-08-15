@@ -51,7 +51,8 @@ router.get('/login', async (req, res) => {
         return res.redirect(decoded.redirectUrl || '/dashboard');
         }
 
-        res.json({ message: 'Authenticated', user });
+        // res.json({ message: 'Authenticated', user });
+        return res.redirect('/dashboard');
     } catch (err) {
         console.error('[LOGIN_ERROR]', err);
         res.status(500).json({ error: 'Internal server error occured' });

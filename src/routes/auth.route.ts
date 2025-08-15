@@ -26,12 +26,10 @@ const createToken = async (user: any): Promise<string> => {
 };
 
 router.get('/login', async (req, res) => {
-    const {
-        telegramUserId,
-    } = req.query;
-
-    if (!telegramUserId) {
-        return res.status(400).json({ error: 'Missing required parameter: telegramUserId' });
+    const { telegramUserId, username, address, signature, language = 'en', redirectUrl } = req.query;
+  
+    if (!telegramUserId || !username || !address || !signature) {
+      return res.status(400).json({ error: 'Missing required parameters' });
     }
 
     try {
@@ -41,19 +39,19 @@ router.get('/login', async (req, res) => {
         }
 
         const token = await createToken(user);
-        const redirectUrl = "/dashboard"
+        res.cookie('auth_token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            sameSite: 'lax',
+        });
+        
         if (redirectUrl) {
-            // const decoded = JSON.parse(Buffer.from(redirectUrl as string, 'base64').toString());
-            // const base = (process.env.FRONTEND_URL || '').replace(/\/+$/, '');
-            // const path = (decoded.redirectUrl || '/dashboard').replace(/^\/+/, '/');
-            const base = (process.env.FRONTEND_URL || '').replace(/\/+$/, '');
-            const path = (redirectUrl || '/dashboard').replace(/^\/+/, '/');
-            const finalRedirectUrl = `${base}${path}?token=${token}`;
-
-            console.log('Redirecting to:', finalRedirectUrl);
-            return res.redirect(finalRedirectUrl);
+        const decoded = JSON.parse(Buffer.from(redirectUrl as string, 'base64').toString());
+        return res.redirect(decoded.redirectUrl || '/dashboard');
         }
-        res.json({ message: 'Authenticated', token });
+
+        res.json({ message: 'Authenticated', user });
     } catch (err) {
         console.error('[LOGIN_ERROR]', err);
         res.status(500).json({ error: 'Internal server error occured' });

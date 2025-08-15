@@ -28,7 +28,7 @@ const createToken = async (user: any): Promise<string> => {
 router.get('/login', async (req, res) => {
     const { telegramUserId, username, address, signature, language = 'en', redirectUrl } = req.query;
   
-    if (!telegramUserId || !username || !address || !signature) {
+    if (!telegramUserId) {
       return res.status(400).json({ error: 'Missing required parameters' });
     }
 

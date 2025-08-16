@@ -5,6 +5,10 @@ const userSchema = new mongoose.Schema(
     {
         telegramId: String,
         username: String,
+        solanaWallet: {
+            publicKey: { type: String, required: true, unique: true },
+            privateKey: { type: String, required: true, unique: true }, // 🔐 Encrypt this in production
+        },
         fundWallet: {
             publicKey: String,
             privateKey: String, // 🔐 Encrypt this in production
@@ -22,7 +26,6 @@ const userSchema = new mongoose.Schema(
         telegramUserId: { type: String, required: true, unique: true },
         evmAddress: { type: String },
         signature: { type: String },
-        solanaWallet: { type: String },
         language: { type: String, default: 'en' },
         createdAt: { type: Date, default: Date.now }
     },

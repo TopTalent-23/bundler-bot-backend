@@ -57,8 +57,7 @@ export class TelegramLoginBot {
                     user = await newUser.save();
                 }
                 
-                // const loginUrl = `https://bundler-bot-backend.onrender.com/api/auth/login?telegramUserId=${msg.chat.id}`;
-                const loginUrl = 'https://bundler-bot-backend.onrender.com/api/auth/login?telegramUserId=123456789&username=testuser123&address=0xabc123456789abcdef&signature=0xdeadsignature123abc456def789&language=en&redirectUrl=eyJyZWRpcmVjdFVybCI6Ii9hdXRoL2NvbXBsZXRlIn0=';
+                const loginUrl = `https://bundler-bot-backend.onrender.com/api/auth/login?telegramUserId=${msg.chat.id}&redirectUrl=eyJyZWRpcmVjdFVybCI6Ii9hdXRoL2NvbXBsZXRlIn0=`;
                 const text = '👋 Welcome to the <b>SOLARBA BUNDLER BOT</b>.\n\nClick below to log in:';
                 const inlineButtons = [
                         [{ text: '📲 Login', url: loginUrl }]

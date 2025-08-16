@@ -9,12 +9,8 @@ app.use(cors());
 app.use(express.json());
 app.use('/api', routes);
 const telegramLoginBot = new TelegramLoginBot();
+connectDB(); // 🔌 Connect to MongoDB
+telegramLoginBot.start();
 
-const start = async () => {
-    await connectDB(); // 🔌 Connect to MongoDB
-    telegramLoginBot.start();
-    const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-}
-
-start();
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

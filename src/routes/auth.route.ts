@@ -1,6 +1,7 @@
 import express from 'express';
 import { Keypair } from '@solana/web3.js';
 import bs58 from 'bs58';
+import { SignJWT } from 'jose';
 import cookieParser from 'cookie-parser';
 import { UserModel } from '../models';
 
@@ -9,10 +10,7 @@ router.use(cookieParser());
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
 
-// Create a JWT token for the user
-const createToken = async (user: any): Promise<string> => {
-    const { SignJWT }: typeof import('jose') = await import('jose');
-    
+const createToken = async (user: any) => {
     return await new SignJWT({
         telegramUserId: user.telegramUserId,
         username: user.username,
@@ -26,36 +24,55 @@ const createToken = async (user: any): Promise<string> => {
 };
 
 router.get('/login', async (req, res) => {
-    const { telegramUserId, username, address, signature, language = 'en', redirectUrl } = req.query;
-  
-    if (!telegramUserId) {
-      return res.status(400).json({ error: 'Missing required parameters' });
+    const {
+        telegramUserId,
+        username,
+        address,
+        signature,
+        language = 'en',
+        redirectUrl,
+    } = req.query;
+
+    if (!telegramUserId || !username || !address || !signature) {
+        return res.status(400).json({ error: 'Missing required parameters' });
     }
 
     try {
-        const user = await UserModel.findOne({ telegramUserId });
+        let user = await UserModel.findOne({ telegramUserId });
+
         if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+            const wallet = Keypair.generate();
+            const solanaWallet = bs58.encode(wallet.secretKey);
+
+            user = await UserModel.create({
+                telegramUserId,
+                username,
+                evmAddress: address,
+                signature,
+                solanaWallet,
+                language,
+                createdAt: new Date(),
+            });
         }
 
         const token = await createToken(user);
-        res.cookie('auth_token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-            sameSite: 'lax',
-        });
-        
+
         if (redirectUrl) {
-        const decoded = JSON.parse(Buffer.from(redirectUrl as string, 'base64').toString());
-        return res.redirect(decoded.redirectUrl || '/dashboard');
+            const decoded = JSON.parse(Buffer.from(redirectUrl as string, 'base64').toString());
+
+            // ✅ Clean slashes
+            const base = (process.env.FRONTEND_URL || '').replace(/\/+$/, '');
+            const path = (decoded.redirectUrl || '/dashboard').replace(/^\/+/, '/');
+            const finalRedirectUrl = `${base}${path}?token=${token}`;
+
+            console.log('✅ Redirecting to:', finalRedirectUrl);
+            return res.redirect(finalRedirectUrl);
         }
 
-        // res.json({ message: 'Authenticated', user });
-        return res.redirect(`https://solana-bundler-gamma.vercel.app/login?token=${token}`);
+        res.json({ message: 'Authenticated', token });
     } catch (err) {
         console.error('[LOGIN_ERROR]', err);
-        res.status(500).json({ error: 'Internal server error occured' });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
@@ -70,8 +87,9 @@ router.get('/me', async (req, res) => {
     if (!token) return res.status(401).json({ error: 'No token provided' });
 
     try {
-        const { jwtVerify }: typeof import('jose') = await import('jose');
-        const { payload } = await jwtVerify(token, JWT_SECRET);
+        const { payload } = await import('jose').then(({ jwtVerify }) =>
+            jwtVerify(token, JWT_SECRET)
+        );
         res.json({ user: payload });
     } catch {
         res.status(401).json({ error: 'Invalid token' });

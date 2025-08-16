@@ -25,56 +25,56 @@ const createToken = async (user: any) => {
 
 router.get('/login', async (req, res) => {
     const {
-        telegramUserId,
-        username,
-        address,
-        signature,
-        language = 'en',
-        redirectUrl,
+      telegramUserId,
+      username,
+      address,
+      signature,
+      language = 'en',
+      redirectUrl,
     } = req.query;
-
-    if (!telegramUserId || !username || !address || !signature) {
-        return res.status(400).json({ error: 'Missing required parameters' });
+  
+    if (!telegramUserId) {
+      return res.status(400).json({ error: 'Missing telegramUserId' });
     }
-
+  
     try {
-        let user = await UserModel.findOne({ telegramUserId });
-
-        if (!user) {
-            const wallet = Keypair.generate();
-            const solanaWallet = bs58.encode(wallet.secretKey);
-
-            user = await UserModel.create({
-                telegramUserId,
-                username,
-                evmAddress: address,
-                signature,
-                solanaWallet,
-                language,
-                createdAt: new Date(),
-            });
-        }
-
-        const token = await createToken(user);
-
-        if (redirectUrl) {
-            const decoded = JSON.parse(Buffer.from(redirectUrl as string, 'base64').toString());
-
-            // ✅ Clean slashes
-            const base = (process.env.FRONTEND_URL || '').replace(/\/+$/, '');
-            const path = (decoded.redirectUrl || '/dashboard').replace(/^\/+/, '/');
-            const finalRedirectUrl = `${base}${path}?token=${token}`;
-
-            console.log('✅ Redirecting to:', finalRedirectUrl);
-            return res.redirect(finalRedirectUrl);
-        }
-
-        res.json({ message: 'Authenticated', token });
+      let user = await UserModel.findOne({ telegramUserId });
+  
+      if (!user) {
+        const wallet = Keypair.generate();
+        const solanaWallet = bs58.encode(wallet.secretKey);
+  
+        user = await UserModel.create({
+          telegramUserId,
+          username: username || '',
+          evmAddress: address || '',
+          signature: signature || '',
+          solanaWallet,
+          language,
+          createdAt: new Date(),
+        });
+      }
+  
+      const token = await createToken(user);
+  
+      if (redirectUrl) {
+        const decoded = JSON.parse(Buffer.from(redirectUrl as string, 'base64').toString());
+  
+        const base = (process.env.FRONTEND_URL || '').replace(/\/+$/, '');
+        const path = (decoded.redirectUrl || '/dashboard').replace(/^\/+/, '/');
+        const finalRedirectUrl = `${base}${path}?token=${token}`;
+  
+        console.log('✅ Redirecting to:', finalRedirectUrl);
+        return res.redirect(finalRedirectUrl);
+      }
+  
+      return res.json({ message: 'Authenticated', token });
     } catch (err) {
-        console.error('[LOGIN_ERROR]', err);
-        res.status(500).json({ error: 'Internal server error' });
+      console.error('[LOGIN_ERROR]', err);
+      return res.status(500).json({ error: 'Internal server error' });
     }
-});
+  });
+  
 
 router.get('/logout', (_req, res) => {
     res.clearCookie('auth_token');
